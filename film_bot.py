@@ -10,7 +10,8 @@ token = os.environ.get('TOKEN')
 bot = telebot.TeleBot(token)
 
 #connect to db
-conn = db.connect(dbname="db_bot", user="postgres", password="qwerty7", host="localhost", port=5432)
+conn = db.connect(dbname=os.environ.get('DBNAME'), user=os.environ.get('USER'), password=os.environ.get('PASSWORD'),
+                  host="localhost", port=5432)
 cursor = conn.cursor()
 
 
