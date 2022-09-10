@@ -3,7 +3,7 @@ import os
 import telebot
 from telebot import types
 import psycopg2 as db
-
+import logging
 
 #initialize bot
 token = os.environ.get('TOKEN')
@@ -14,8 +14,9 @@ conn = db.connect(dbname=os.environ.get('DBNAME'), user=os.environ.get('USER'), 
                   host="localhost", port=5432)
 cursor = conn.cursor()
 
+logger = telebot.logger
+telebot.logger.setLevel(logging.INFO)
 
-# Функция, обрабатывающая команду /start
 @bot.message_handler(commands=["start"])
 def start(m):
     user_id = m.from_user.id
