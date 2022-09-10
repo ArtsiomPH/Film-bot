@@ -1,21 +1,26 @@
 import os
 
 import telebot
-from telebot import types
 import psycopg2 as db
 import logging
 
-#initialize bot
-token = os.environ.get('TOKEN')
-bot = telebot.TeleBot(token)
+from flask import Flask, request
+from telebot import types
+from config import *
 
-#connect to db
+# initialize bot
+bot = telebot.TeleBot(TOKEN)
+
+server = Flask(__name__)
+
+# connect to db
 conn = db.connect(dbname=os.environ.get('DBNAME'), user=os.environ.get('USER'), password=os.environ.get('PASSWORD'),
                   host="localhost", port=5432)
 cursor = conn.cursor()
 
 logger = telebot.logger
-telebot.logger.setLevel(logging.INFO)
+logger.setLevel(logging.INFO)
+
 
 @bot.message_handler(commands=["start"])
 def start(m):
@@ -25,8 +30,8 @@ def start(m):
     conn.commit()
 
     bot.send_message(m.chat.id, f'Привет. Я фильм-бот, если тебе попался интересный фильм или сериал,'
-                     f'и ты не хочешь забыть его название, можешь сказать его мне и я запомню. \n'
-                     f'Напиши ОК, чтобы начать.')
+                                f'и ты не хочешь забыть его название, можешь сказать его мне и я запомню. \n'
+                                f'Напиши ОК, чтобы начать.')
 
     bot.register_next_step_handler(m, get_type_of_content)
 
@@ -67,7 +72,6 @@ def callback_worker(message):
         bot.send_message(message.chat.id, answer)
 
 
-
 @bot.message_handler(content_types=["text"])
 def add_film(message):
     user_id = message.from_user.id
@@ -76,6 +80,7 @@ def add_film(message):
     bot.send_message(message.chat.id, f'Название "{message.text}" добавлено')
 
 
+@bot.message_handler(content_types=["text"])
 def add_serial(message):
     user_id = message.from_user.id
     cursor.execute(f"INSERT INTO serials(user_id, title) VALUES ('{user_id}', '{message.text}')")
@@ -83,5 +88,18 @@ def add_serial(message):
     bot.send_message(message.chat.id, f'Название "{message.text}" добавлено')
 
 
+@server.route(f'{TOKEN}', methods=["POST"])
+def redirect_message():
+    json_string = request.get_data().decode('utf-8')
+    update = telebot.types.Update.de_json(json_string)
+    bot.process_new_updates([update])
+    return '!', 200
+
+
 # Запускаем бота
-bot.infinity_polling(none_stop=True, interval=0)
+# bot.infinity_polling(none_stop=True, interval=0)
+
+if __name__ == '__main__':
+    bot.remove_webhook()
+    bot.set_webhook(url=APP_URL)
+    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
