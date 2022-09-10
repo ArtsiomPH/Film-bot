@@ -11,7 +11,7 @@ from config import *
 # initialize bot
 bot = telebot.TeleBot(TOKEN)
 
-server = Flask(__name__)
+# server = Flask(__name__)
 
 # connect to db
 conn = db.connect(dbname=os.environ.get('DBNAME'), user=os.environ.get('USER'), password=os.environ.get('PASSWORD'),
@@ -88,18 +88,18 @@ def add_serial(message):
     bot.send_message(message.chat.id, f'Название "{message.text}" добавлено')
 
 
-@server.route(f'{TOKEN}', methods=["POST"])
-def redirect_message():
-    json_string = request.get_data().decode('utf-8')
-    update = telebot.types.Update.de_json(json_string)
-    bot.process_new_updates([update])
-    return '!', 200
+# @server.route(f'{TOKEN}', methods=["POST"])
+# def redirect_message():
+#     json_string = request.get_data().decode('utf-8')
+#     update = telebot.types.Update.de_json(json_string)
+#     bot.process_new_updates([update])
+#     return '!', 200
 
 
 # Запускаем бота
-# bot.infinity_polling(none_stop=True, interval=0)
+bot.infinity_polling(none_stop=True, interval=0)
 
-if __name__ == '__main__':
-    bot.remove_webhook()
-    bot.set_webhook(url=APP_URL)
-    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
+# if __name__ == '__main__':
+#     bot.remove_webhook()
+#     bot.set_webhook(url=APP_URL)
+#     server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
