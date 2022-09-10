@@ -11,15 +11,10 @@ from config import *
 # initialize bot
 bot = telebot.TeleBot(TOKEN)
 
-# server = Flask(__name__)
-
 # connect to db
 conn = db.connect(dbname=os.environ.get('DBNAME'), user=os.environ.get('USER'), password=os.environ.get('PASSWORD'),
                   host="localhost", port=5432)
 cursor = conn.cursor()
-
-logger = telebot.logger
-logger.setLevel(logging.DEBUG)
 
 
 @bot.message_handler(commands=["start"])
@@ -88,18 +83,22 @@ def add_serial(message):
     bot.send_message(message.chat.id, f'Название "{message.text}" добавлено')
 
 
-# @server.route(f'{TOKEN}', methods=["POST"])
-# def redirect_message():
-#     json_string = request.get_data().decode('utf-8')
-#     update = telebot.types.Update.de_json(json_string)
-#     bot.process_new_updates([update])
-#     return '!', 200
-
-
 # Запускаем бота
-bot.infinity_polling(none_stop=True, interval=0)
+if "HEROKU" in list(os.environ.keys()):
+    logger = telebot.logger
+    telebot.logger.setLevel(logging.INFO)
 
-# if __name__ == '__main__':
-#     bot.remove_webhook()
-#     bot.set_webhook(url=APP_URL)
-#     server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
+    server = Flask(__name__)
+    @server.route(f"/{TOKEN}", methods=['POST'])
+    def getMessage():
+        bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+        return "!", 200
+    @server.route("/")
+    def webhook():
+        bot.remove_webhook()
+        bot.set_webhook(url=APP_URL)
+        return "?", 200
+    server.run(host="0.0.0.0", port=os.environ.get('PORT', 5000))
+else:
+    bot.remove_webhook()
+    bot.polling(none_stop=True)
