@@ -11,9 +11,12 @@ from config import *
 # initialize bot
 bot = telebot.TeleBot(TOKEN)
 
+#set logging
+logger = telebot.logger
+telebot.logger.setLevel(logging.DEBUG)
+
 # connect to db
-conn = db.connect(dbname=os.environ.get('DBNAME'), user=os.environ.get('USER'), password=os.environ.get('PASSWORD'),
-                  host="localhost", port=5432)
+conn = db.connect(DB_URI, sslmode='require')
 cursor = conn.cursor()
 
 server = Flask(__name__)
@@ -95,6 +98,7 @@ def webhook():
     bot.remove_webhook()
     bot.set_webhook(url=APP_URL)
     return "!", 200
+
 
 # Запускаем бота
 if __name__ == '__main__':
