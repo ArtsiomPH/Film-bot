@@ -19,7 +19,7 @@ conn = db.connect(dbname=os.environ.get('DBNAME'), user=os.environ.get('USER'), 
 cursor = conn.cursor()
 
 logger = telebot.logger
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 @bot.message_handler(commands=["start"])
