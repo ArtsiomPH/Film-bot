@@ -11,7 +11,7 @@ from config import *
 # initialize bot
 bot = telebot.TeleBot(TOKEN)
 
-#set logging
+# set logging
 logger = telebot.logger
 telebot.logger.setLevel(logging.DEBUG)
 
@@ -19,7 +19,9 @@ telebot.logger.setLevel(logging.DEBUG)
 conn = db.connect(DB_URI, sslmode='require')
 cursor = conn.cursor()
 
+# init server
 server = Flask(__name__)
+
 
 @bot.message_handler(commands=["start"])
 def start(m):
@@ -87,20 +89,20 @@ def add_serial(message):
     bot.send_message(message.chat.id, f'Название "{message.text}" добавлено')
 
 
-
 @server.route('/' + TOKEN, methods=['POST'])
-def getMessage():
+def get_message():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-    return "!", 200
+    return "<h1>Test bot</h1>", 200
+
 
 @server.route("/")
 def webhook():
     bot.remove_webhook()
     bot.set_webhook(url=APP_URL)
-    return "!", 200
+    return "<h2>webhook</h2>", 200
 
 
-# Запускаем бота
+# run bot
 if __name__ == '__main__':
     server.debug = True
     server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
