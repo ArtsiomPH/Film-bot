@@ -88,20 +88,14 @@ def add_serial(message):
     bot.send_message(message.chat.id, f'Название "{message.text}" добавлено')
 
 
-@server.route('/' + TOKEN, methods=['POST'])
-def getMessage():
+@server.route(f'/{TOKEN}', methods=['POST'])
+def redirect_message():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
     return "bot", 200
 
 
-@server.route("/")
-def webhook():
-    bot.remove_webhook()
-    bot.set_webhook(url=APP_URL)
-    return "hook", 200
-
-
 # Запускаем бота
 if __name__ == '__main__':
-    server.debug = True
+    bot.remove_webhook()
+    bot.set_webhook(url=APP_URL)
     server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
