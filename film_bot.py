@@ -19,22 +19,21 @@ telebot.logger.setLevel(logging.DEBUG)
 conn = db.connect(DB_URI, sslmode='require')
 cursor = conn.cursor()
 
-# init server
 server = Flask(__name__)
 
 
 @bot.message_handler(commands=["start"])
-def start(m):
-    user_id = m.from_user.id
+def start(message):
+    user_id = message.from_user.id
 
-    cursor.execute(f"INSERT INTO users VALUES ('{user_id}', '{m.from_user.username}') ON CONFLICT DO NOTHING;")
+    cursor.execute(f"INSERT INTO users VALUES ('{user_id}', '{message.from_user.username}') ON CONFLICT DO NOTHING;")
     conn.commit()
 
-    bot.send_message(m.chat.id, f'Привет. Я фильм-бот, если тебе попался интересный фильм или сериал,'
+    bot.send_message(message.chat.id, f'Привет. Я фильм-бот, если тебе попался интересный фильм или сериал,'
                                 f'и ты не хочешь забыть его название, можешь сказать его мне и я запомню. \n'
                                 f'Напиши ОК, чтобы начать.')
 
-    bot.register_next_step_handler(m, get_type_of_content)
+    bot.register_next_step_handler(message, get_type_of_content)
 
 
 @bot.message_handler(content_types=["button"])
@@ -90,19 +89,19 @@ def add_serial(message):
 
 
 @server.route('/' + TOKEN, methods=['POST'])
-def get_message():
+def getMessage():
     bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-    return "<h1>Test bot</h1>", 200
+    return "bot", 200
 
 
 @server.route("/")
 def webhook():
     bot.remove_webhook()
     bot.set_webhook(url=APP_URL)
-    return "<h2>webhook</h2>", 200
+    return "hook", 200
 
 
-# run bot
+# Запускаем бота
 if __name__ == '__main__':
     server.debug = True
     server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
