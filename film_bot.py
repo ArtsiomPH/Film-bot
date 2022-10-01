@@ -94,8 +94,6 @@ def redirect_message():
     return "bot", 200
 
 
-conn.close()
-
 # Запускаем бота
 if __name__ == '__main__':
     bot.remove_webhook()
