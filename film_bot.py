@@ -8,7 +8,7 @@ from flask import Flask, request
 from telebot import types
 
 # initialize bot
-TOKEN = os.environ.get('TOKEN')
+TOKEN = os.getenv('TOKEN')
 bot = telebot.TeleBot(TOKEN)
 
 # set logging
@@ -16,7 +16,7 @@ logger = telebot.logger
 telebot.logger.setLevel(logging.DEBUG)
 
 # connect to db
-DB_URI = os.environ.get('DB_URI')
+DB_URI = os.getenv('DB_URI')
 conn = db.connect(DB_URI, sslmode='require')
 cursor = conn.cursor()
 
@@ -97,7 +97,7 @@ def redirect_message():
 
 # Запускаем бота
 if __name__ == '__main__':
-    APP_URL = os.environ.get('APP_URL')
+    APP_URL = os.getenv('APP_URL')
     bot.remove_webhook()
     bot.set_webhook(url=APP_URL)
-    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
+    server.run(host="0.0.0.0", port=int(os.getenv('PORT', 5000)))
