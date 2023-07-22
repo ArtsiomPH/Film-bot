@@ -21,6 +21,7 @@ conn = db.connect(DB_URI, sslmode="require")
 cursor = conn.cursor()
 
 server = Flask(__name__)
+APP_URL = os.getenv('APP_URL')
 
 
 @bot.message_handler(commands=["start"])
@@ -111,5 +112,13 @@ def add_serial(message):
     bot.send_message(message.chat.id, f'Название "{message.text}" добавлено')
 
 
-bot.delete_webhook()
-bot.infinity_polling()
+@server.route("/" + TOKEN, methods=['POST'])
+def getMessage():
+    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+    return "!", 200
+
+
+if __name__ == "__main__":
+    bot.remove_webhook()
+    bot.set_webhook(url='APP_URL' + TOKEN)
+    server.run(host="0.0.0.0", port=os.environ.get('PORT', 5000), debug=True)
