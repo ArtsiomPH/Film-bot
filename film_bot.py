@@ -8,7 +8,7 @@ from flask import Flask, request
 from telebot import types
 
 # initialize bot
-TOKEN = os.getenv('TOKEN')
+TOKEN = os.getenv("TOKEN")
 bot = telebot.TeleBot(TOKEN)
 
 # set logging
@@ -16,8 +16,8 @@ logger = telebot.logger
 telebot.logger.setLevel(logging.DEBUG)
 
 # connect to db
-DB_URI = os.getenv('DB_URI')
-conn = db.connect(DB_URI, sslmode='require')
+DB_URI = os.getenv("DB_URI")
+conn = db.connect(DB_URI, sslmode="require")
 cursor = conn.cursor()
 
 server = Flask(__name__)
@@ -27,15 +27,26 @@ server = Flask(__name__)
 def start(message):
     user_id = message.from_user.id
 
-    cursor.execute(f"CREATE TABLE IF NOT EXISTS users (id SERIAL, username VARCHAR);")
-    cursor.execute(f"CREATE TABLE IF NOT EXISTS serials (id SERIAL, user_id REFERENCES users(id), title VARCHAR);")
-    cursor.execute(f"CREATE TABLE IF NOT EXISTS films (id SERIAL, user_id REFERENCES users(id), title VARCHAR);")
-    cursor.execute(f"INSERT INTO users VALUES ('{user_id}', '{message.from_user.username}') ON CONFLICT DO NOTHING;")
+    cursor.execute(
+        f"CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, username VARCHAR);"
+    )
+    cursor.execute(
+        f"CREATE TABLE IF NOT EXISTS serials (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id), title VARCHAR);"
+    )
+    cursor.execute(
+        f"CREATE TABLE IF NOT EXISTS films (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id), title VARCHAR);"
+    )
+    cursor.execute(
+        f"INSERT INTO users VALUES ('{user_id}', '{message.from_user.username}') ON CONFLICT DO NOTHING;"
+    )
     conn.commit()
 
-    bot.send_message(message.chat.id, f'Привет. Я фильм-бот, если тебе попался интересный фильм или сериал,'
-                                f'и ты не хочешь забыть его название, можешь сказать его мне и я запомню. \n'
-                                f'Напиши ОК, чтобы начать.')
+    bot.send_message(
+        message.chat.id,
+        f"Привет. Я фильм-бот, если тебе попался интересный фильм или сериал,"
+        f"и ты не хочешь забыть его название, можешь сказать его мне и я запомню. \n"
+        f"Напиши ОК, чтобы начать.",
+    )
 
     bot.register_next_step_handler(message, get_type_of_content)
 
@@ -43,35 +54,39 @@ def start(message):
 @bot.message_handler(content_types=["button"])
 def get_type_of_content(message):
     markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
-    but1 = types.KeyboardButton(text='Фильмы')
+    but1 = types.KeyboardButton(text="Фильмы")
     markup.add(but1)
-    but2 = types.KeyboardButton(text='Сериалы')
+    but2 = types.KeyboardButton(text="Сериалы")
     markup.add(but2)
-    but3 = types.KeyboardButton(text='Посмотреть список фильмов')
+    but3 = types.KeyboardButton(text="Посмотреть список фильмов")
     markup.add(but3)
-    but4 = types.KeyboardButton(text='Посмотреть список сериалов')
+    but4 = types.KeyboardButton(text="Посмотреть список сериалов")
     markup.add(but4)
-    msg = 'Добавляйте новый фильм или сериал в ваш лист ожидания, либо просматривайте, что уже в него добавлено.'
+    msg = "Добавляйте новый фильм или сериал в ваш лист ожидания, либо просматривайте, что уже в него добавлено."
     bot.send_message(message.chat.id, text=msg, reply_markup=markup)
     bot.register_next_step_handler(message, callback_worker)
 
 
 @bot.message_handler(content_types=["text"])
 def callback_worker(message):
-    if message.text.strip() == 'Фильмы':
-        answer = 'Введите название фильма!'
+    if message.text.strip() == "Фильмы":
+        answer = "Введите название фильма!"
         bot.send_message(message.chat.id, answer)
         bot.register_next_step_handler(message, add_film)
-    elif message.text.strip() == 'Сериалы':
-        answer = 'Введите название сериала!'
+    elif message.text.strip() == "Сериалы":
+        answer = "Введите название сериала!"
         bot.send_message(message.chat.id, answer)
         bot.register_next_step_handler(message, add_serial)
-    elif message.text.strip() == 'Посмотреть список фильмов':
-        cursor.execute(f"SELECT title FROM films WHERE user_id = {message.from_user.id}")
+    elif message.text.strip() == "Посмотреть список фильмов":
+        cursor.execute(
+            f"SELECT title FROM films WHERE user_id = {message.from_user.id}"
+        )
         answer = "\n".join(list(str(*i) for i in cursor.fetchall()))
         bot.send_message(message.chat.id, answer)
-    elif message.text.strip() == 'Посмотреть список сериалов':
-        cursor.execute(f"SELECT title FROM serials WHERE user_id = {message.from_user.id}")
+    elif message.text.strip() == "Посмотреть список сериалов":
+        cursor.execute(
+            f"SELECT title FROM serials WHERE user_id = {message.from_user.id}"
+        )
         answer = "\n".join(list(str(*i) for i in cursor.fetchall()))
         bot.send_message(message.chat.id, answer)
 
@@ -79,7 +94,9 @@ def callback_worker(message):
 @bot.message_handler(content_types=["text"])
 def add_film(message):
     user_id = message.from_user.id
-    cursor.execute(f"INSERT INTO films(user_id, title) VALUES ('{user_id}', '{message.text}')")
+    cursor.execute(
+        f"INSERT INTO films(user_id, title) VALUES ('{user_id}', '{message.text}')"
+    )
     conn.commit()
     bot.send_message(message.chat.id, f'Название "{message.text}" добавлено')
 
@@ -87,7 +104,9 @@ def add_film(message):
 @bot.message_handler(content_types=["text"])
 def add_serial(message):
     user_id = message.from_user.id
-    cursor.execute(f"INSERT INTO serials(user_id, title) VALUES ('{user_id}', '{message.text}')")
+    cursor.execute(
+        f"INSERT INTO serials(user_id, title) VALUES ('{user_id}', '{message.text}')"
+    )
     conn.commit()
     bot.send_message(message.chat.id, f'Название "{message.text}" добавлено')
 
