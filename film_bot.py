@@ -27,6 +27,9 @@ server = Flask(__name__)
 def start(message):
     user_id = message.from_user.id
 
+    cursor.execute(f"CREATE TABLE IF NOT EXISTS users (id SERIAL, username VARCHAR);")
+    cursor.execute(f"CREATE TABLE IF NOT EXISTS serials (id SERIAL, user_id REFERENCES users(id), title VARCHAR);")
+    cursor.execute(f"CREATE TABLE IF NOT EXISTS films (id SERIAL, user_id REFERENCES users(id), title VARCHAR);")
     cursor.execute(f"INSERT INTO users VALUES ('{user_id}', '{message.from_user.username}') ON CONFLICT DO NOTHING;")
     conn.commit()
 
