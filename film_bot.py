@@ -92,15 +92,5 @@ def add_serial(message):
     bot.send_message(message.chat.id, f'Название "{message.text}" добавлено')
 
 
-@server.route(f'/{TOKEN}', methods=['POST'])
-def redirect_message():
-    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-    return "bot", 200
-
-
-# Запускаем бота
-if __name__ == '__main__':
-    APP_URL = os.getenv('APP_URL')
-    bot.remove_webhook()
-    bot.set_webhook(url=APP_URL)
-    server.run(host="0.0.0.0", port=int(os.getenv('PORT', 5000)))
+bot.delete_webhook()
+bot.infinity_polling()
